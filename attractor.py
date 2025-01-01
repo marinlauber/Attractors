@@ -4,7 +4,9 @@ __license__ = "GPL"
 __version__ = "1.0.1"
 __email__ = "M.Lauber@soton.ac.uk"
 
-import numpy as np, pandas as pd, datashader as ds
+import numpy as np
+import pandas as pd
+import datashader as ds
 from datashader import transfer_functions as tf
 from datashader.colors import inferno, viridis, Greys9
 from numba import jit
@@ -65,5 +67,16 @@ def MakeImage(trajectory, cm=['#114d7d', '#000000'], size=(1080, 1080)):
     return img
 
 
-def SaveImage(img, fname='image'):
-    ds.utils.export_image(img=img,filename=fname,fmt=".png",background='white')
+def SaveImage(img, fname='image', fmt=".png", back="white"):
+    ds.utils.export_image(img=img,filename=fname,fmt=fmt,background=back)
+
+
+def SaveTrajectory(trajectory, fname='trajectory', fmt=".csv"):
+    trajectory.to_csv(fname+fmt, index=False)
+
+if __name__ == "__main__":
+    strange = ComputeTrajectory(Clifford, 0, 0, -1.8, -2.0, -0.5, -0.9, n=50000000)
+    SaveTrajectory(strange, 'clifford')
+    img = MakeImage(strange, cm=['#114d7d', 'black'], size=[3048,3048])
+    SaveImage(img, fname='images/test_1', fmt=".png")
+    print("Done!")
