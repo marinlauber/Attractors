@@ -71,12 +71,38 @@ def SaveImage(img, fname='image', fmt=".png", back="white"):
     ds.utils.export_image(img=img,filename=fname,fmt=fmt,background=back)
 
 
-def SaveTrajectory(trajectory, fname='trajectory', fmt=".csv"):
-    trajectory.to_csv(fname+fmt, index=False)
+def SaveTrajectory(trajectory, fname='trajectory', fmt=".csv", every=1):
+    trajectory[::every].to_csv(fname+fmt, index=False)
+
+
+def TrajLength(x, y):
+    return np.sum(np.sqrt((x[1:-1] - x[0:-2])**2 + (y[1:-1] - y[0:-2])**2))
+
+
+def extrema(data, axis=0):
+    return (data.min(axis=axis).values,data.max(axis=axis).values)
+
 
 if __name__ == "__main__":
-    strange = ComputeTrajectory(Clifford, 0, 0, -1.8, -2.0, -0.5, -0.9, n=50000000)
-    SaveTrajectory(strange, 'clifford')
-    img = MakeImage(strange, cm=['#114d7d', 'black'], size=[3048,3048])
-    SaveImage(img, fname='images/test_1', fmt=".png")
+
+    import argparse
+
+    # get the length scale if provided
+    parser = argparse.ArgumentParser(description='Computes the trajectory of a given attractor [Clifford/PeterdeJong]')
+    parser.add_argument('-A','--attractor', help='The attractor [Clifford/PeterdeJong]', default="Clifford", choices=["Clifford", "PeterdeJong"])
+    parser.add_argument('-N','--npoints', type=int, help='number of points', default=1000000)
+    parser.add_argument('-C','--coeff', help='coefficients of the attractor', default="[-1.8,-2,-0.5,-0.9]")
+    args = parser.parse_args()
+    # helper
+    c = eval(args.coeff)
+    if args.attractor=="Clifford":
+        attractor = Clifford
+    elif args.attractor=="PeterdeJong":
+        attractor = PeterdeJong
+    else:
+        exit
+    strange = ComputeTrajectory(attractor, 0, 0, c[0], c[1], c[2], c[3], n=args.npoints)
+    SaveTrajectory(strange, args.attractor, every=100)
+    print("Extremas min/max: ", extrema(strange))
+    print("Trajectory length %.1f" % TrajLength(strange.x.values,strange.y.values))
     print("Done!")
